@@ -1,0 +1,30 @@
+# ── Secrets. Nothing in this group may ever be committed. ──────────────────────
+# A commit does not remove a secret — it only stops it being in the WORKING TREE.
+# Once pushed, it is in the history for ever, and the only real remedy is to
+# rotate the credential. Treat an accidental commit as a disclosure, not a typo.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+certs/
+secrets/
+
+# ── Local state that is not source ─────────────────────────────────────────────
+backups/
+server/data/
+data/uploads/
+*.sqlite
+*.db
+
+# ── Build / tooling noise ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+node_modules/
+.dart_tool/
+build/
+*.bak
+*.bak.*
+.DS_Store

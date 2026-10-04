@@ -1,0 +1,84 @@
+services:
+  messenger:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: messenger-api-stage
+    restart: unless-stopped
+    environment:
+      - MESSENGER_DEBUG=false
+      - MESSENGER_DATABASE_URL=postgresql+asyncpg://messenger:${DB_PASSWORD}@postgres:5432/messenger
+      - MESSENGER_SECRET_KEY=${SECRET_KEY}
+      - MESSENGER_VAPID_PUBLIC_KEY=${MESSENGER_VAPID_PUBLIC_KEY}
+      - MESSENGER_VAPID_PRIVATE_KEY_FILE=/app/vapid_private.pem
+      - MESSENGER_VAPID_EMAIL=mailto:admin@localhost
+      # TURN server settings (optional)
+      - MESSENGER_TURN_ENABLED=${MESSENGER_TURN_ENABLED:-false}
+      - MESSENGER_TURN_SERVER_URL=${MESSENGER_TURN_SERVER_URL:-}
+      - MESSENGER_TURN_SERVER_PORT=${MESSENGER_TURN_SERVER_PORT:-443}
+      - MESSENGER_TURN_USERNAME=${MESSENGER_TURN_USERNAME:-}
+      - MESSENGER_TURN_CREDENTIAL=${MESSENGER_TURN_CREDENTIAL:-}
+      - MESSENGER_STUN_SERVER_URL=${MESSENGER_STUN_SERVER_URL:-stun:stun.l.google.com:19302}
+      # WebAuthn (REQUIRED for production — must match your domain)
+      - MESSENGER_WEBAUTHN_RP_ID=${MESSENGER_WEBAUTHN_RP_ID:-stage.vibemessenger.ai}
+      - MESSENGER_WEBAUTHN_EXPECTED_ORIGIN=${MESSENGER_WEBAUTHN_EXPECTED_ORIGIN:-https://stage.vibemessenger.ai}
+      # v3.11.9: Envelope encryption for TOTP secrets at rest (generate: python -c "import secrets; print(secrets.token_hex(32))")
+      - MESSENGER_TOTP_ENCRYPTION_KEY=${MESSENGER_TOTP_ENCRYPTION_KEY:-}
+      # Backup settings
+      - BACKUP_DIR=/mnt/backup
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./server/vapid_private.pem:/app/vapid_private.pem:ro
+      - ./data:/app/data
+      - /mnt/backup:/mnt/backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - messenger-net-stage
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: messenger-db-stage
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=messenger
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=messenger
+    volumes:
+      - postgres_data_stage:/var/lib/postgresql/data
+    networks:
+      - messenger-net-stage
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messenger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: messenger-nginx-stage
+    restart: unless-stopped
+    ports:
+      - "7081:80"
+      - "7444:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web-client:/usr/share/nginx/html:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - messenger
+    networks:
+      - messenger-net-stage
+
+volumes:
+  postgres_data_stage:
+
+networks:
+  messenger-net-stage:
+    driver: bridge

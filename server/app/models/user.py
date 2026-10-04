@@ -1,0 +1,329 @@
+import uuid
+"""
+User model and related schemas.
+Version: 3.7.0 - Added SPK rotation support, session tracking
+"""
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, ForeignKey, func
+from sqlalchemy.orm import relationship
+from pydantic import BaseModel, Field, field_validator
+import re
+
+from app.database import Base, TimestampMixin
+
+
+# ============== Password Validation ==============
+
+def validate_password_strength(password: str) -> tuple[bool, str | None]:
+    """
+    Validate password strength.
+    
+    Returns (is_valid, error_message).
+    If valid, error_message is None.
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters"
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r'\d', password):
+        return False, "Password must contain at least one digit"
+    return True, None
+
+
+class User(Base, TimestampMixin):
+    """User database model."""
+    __tablename__ = "users"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    display_name = Column(String(100), unique=True, nullable=False, index=True)
+    phone_hash = Column(String(64), unique=True, nullable=True, index=True)
+    password_hash = Column(String(128), nullable=False)
+    avatar_url = Column(String(256), nullable=True)
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    last_seen = Column(DateTime(timezone=True), nullable=True)
+    device_id = Column(String(64), nullable=True)
+    push_token = Column(String(256), nullable=True)
+    
+    # Two-Factor Authentication (TOTP)
+    # КАО#302: was String(64) — but once the secret is encrypted at rest it is stored as
+    # "enc:" + base64(nonce|ciphertext|tag) ≈ 84-88 chars, so EVERY /auth/totp/setup blew up with
+    # StringDataRightTruncationError (500) and 2FA could not be enabled at all. The legacy plaintext
+    # base32 secret (32 chars) fit, which is why this stayed hidden until an end-to-end setup test.
+    totp_secret = Column(String(255), nullable=True)  # Encrypted TOTP secret
+    totp_enabled = Column(Boolean, default=False)
+    # КАО#301: highest TOTP time-step already accepted for this user. A code stays valid for its whole
+    # 30s step (plus the ±1 window), so without this a captured/shoulder-surfed code could simply be
+    # replayed within ~90s. Verification now refuses any counter <= this one.
+    totp_last_counter = Column(Integer, nullable=True)
+    recovery_codes = Column(Text, nullable=True)  # JSON array of hashed codes
+    
+    # Permissions
+    can_send_text = Column(Boolean, default=True)
+    can_send_files = Column(Boolean, default=True)
+    can_send_voice = Column(Boolean, default=True)
+    can_call = Column(Boolean, default=True)
+    is_blocked = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
+    
+    # v3.7.27: Self-encryption key for multi-device sync
+    # This key is shared across all devices of the same user
+    self_encryption_key = Column(Text, nullable=True)
+    
+    key_bundles = relationship("KeyBundle", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    webauthn_credentials = relationship("WebAuthnCredential", back_populates="user", cascade="all, delete-orphan")
+
+
+class WebAuthnCredential(Base, TimestampMixin):
+    """WebAuthn credential for biometric/passkey authentication."""
+    __tablename__ = "webauthn_credentials"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Credential data (from VerifiedRegistration)
+    credential_id = Column(Text, nullable=False, unique=True)         # base64url-encoded
+    public_key = Column(Text, nullable=False)                          # base64url-encoded
+    sign_count = Column(Integer, nullable=False, default=0)
+    
+    # Metadata
+    device_name = Column(String(100), nullable=False, default="Passkey")
+    aaguid = Column(String(36), nullable=True)
+    credential_device_type = Column(String(30), nullable=True)
+    credential_backed_up = Column(Boolean, default=False)
+    
+    # Transports (JSON array of strings like ["internal", "hybrid"])
+    transports = Column(Text, nullable=True)
+    
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    
+    user = relationship("User", back_populates="webauthn_credentials")
+
+
+class KeyBundle(Base, TimestampMixin):
+    """User's public key bundle for X3DH / PQXDH key exchange.
+    
+    v3.11.0: Added PQ-KEM fields for post-quantum hybrid key exchange (PQXDH).
+    When pq_kem_public_key is present, session initiation uses ML-KEM-768
+    in addition to X25519 for quantum-resistant key agreement.
+    """
+    __tablename__ = "key_bundles"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    identity_key = Column(String(64), nullable=False)
+    
+    # Current signed prekey
+    signed_prekey_id = Column(Integer, nullable=False)
+    signed_prekey = Column(String(64), nullable=False)
+    signed_prekey_signature = Column(String(128), nullable=False)
+    signed_prekey_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    # Previous signed prekey (for in-flight messages during rotation)
+    previous_signed_prekey_id = Column(Integer, nullable=True)
+    previous_signed_prekey = Column(String(64), nullable=True)
+    previous_signed_prekey_signature = Column(String(128), nullable=True)
+    previous_signed_prekey_created_at = Column(DateTime(timezone=True), nullable=True)
+    
+    one_time_prekeys = Column(Text, default="[]")
+    
+    # v3.11.0: Post-Quantum KEM (ML-KEM-768 / FIPS 203)
+    # Public key ~1184 bytes → ~1580 base64 chars
+    pq_kem_public_key = Column(Text, nullable=True)
+    
+    # v3.11.8: Ed25519 signing public key for SPK signature verification
+    # Allows recipients to verify the signed prekey was signed by the bundle owner
+    signing_public_key = Column(String(64), nullable=True)
+    
+    user = relationship("User", back_populates="key_bundles")
+
+
+class RefreshToken(Base, TimestampMixin):
+    """Refresh token for maintaining sessions."""
+    __tablename__ = "refresh_tokens"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True)
+    device_id = Column(String(64), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    is_revoked = Column(Boolean, default=False)
+    
+    # Session tracking (v3.7.0)
+    ip_address = Column(String(45), nullable=True)  # IPv6 max length
+    user_agent = Column(String(512), nullable=True)
+    last_activity = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    # v3.7.2: Link to current access token for reliable session identification
+    access_token_jti = Column(String(36), nullable=True, index=True)
+    
+    user = relationship("User", back_populates="refresh_tokens")
+
+
+# ============== Pydantic Schemas ==============
+
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=8, max_length=128)
+    display_name: str = Field(..., min_length=2, max_length=100)
+    device_id: str | None = Field(None, max_length=64)
+    
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+            raise ValueError('Username can only contain letters, numbers, underscores and hyphens')
+        return v.lower()
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        is_valid, error_msg = validate_password_strength(v)
+        if not is_valid:
+            raise ValueError(error_msg)
+        return v
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+    device_id: str | None = None
+    totp_code: str | None = None  # 6-digit TOTP code or recovery code
+
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    display_name: str
+    avatar_url: str | None = None
+    is_verified: bool
+    is_admin: bool = False
+    last_seen: datetime | None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+class TokenRefresh(BaseModel):
+    refresh_token: str
+
+
+class KeyBundleCreate(BaseModel):
+    identity_key: str
+    signed_prekey_id: int
+    signed_prekey: str
+    signed_prekey_signature: str
+    one_time_prekeys: list[dict] = Field(default_factory=list)
+    # Optional: previous signed prekey for rotation
+    previous_signed_prekey_id: int | None = None
+    previous_signed_prekey: str | None = None
+    previous_signed_prekey_signature: str | None = None
+    # v3.11.0: Post-quantum KEM public key (ML-KEM-768, base64)
+    pq_kem_public_key: str | None = None
+    # v3.11.8: Ed25519 signing public key for SPK signature verification
+    signing_public_key: str | None = None
+
+
+class KeyBundleResponse(BaseModel):
+    user_id: str
+    identity_key: str
+    signed_prekey_id: int
+    signed_prekey: str
+    signed_prekey_signature: str
+    one_time_prekey: dict | None = None
+    # Include previous SPK if available (for in-flight messages)
+    previous_signed_prekey_id: int | None = None
+    previous_signed_prekey: str | None = None
+    previous_signed_prekey_signature: str | None = None
+    # v3.11.0: Post-quantum KEM public key (ML-KEM-768, base64)
+    pq_kem_public_key: str | None = None
+    # v3.11.8: Ed25519 signing public key for SPK signature verification
+    signing_public_key: str | None = None
+    
+    class Config:
+        from_attributes = True
+
+
+class PushSubscription(Base):
+    """Push notification subscription storage."""
+    __tablename__ = "push_subscriptions"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    endpoint = Column(String(500), nullable=False)
+    p256dh = Column(String(200), nullable=False)
+    auth = Column(String(100), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+# ============== TOTP Schemas ==============
+
+class TOTPSetupResponse(BaseModel):
+    """Response for TOTP setup - contains secret and QR code."""
+    secret: str
+    qr_code: str  # Base64 encoded PNG
+    provisioning_uri: str
+
+
+class TOTPEnableRequest(BaseModel):
+    """Request to enable TOTP after verification."""
+    code: str = Field(..., min_length=6, max_length=6)
+
+
+class TOTPEnableResponse(BaseModel):
+    """Response after enabling TOTP - contains recovery codes."""
+    enabled: bool
+    recovery_codes: list[str]
+
+
+class TOTPVerifyRequest(BaseModel):
+    """Request to verify TOTP code."""
+    code: str = Field(..., min_length=6, max_length=10)  # 6 for TOTP, 9 for recovery (XXXX-XXXX)
+
+
+class TOTPDisableRequest(BaseModel):
+    """Request to disable TOTP."""
+    password: str
+    code: str = Field(..., min_length=6, max_length=10)
+
+
+class TOTPStatusResponse(BaseModel):
+    """TOTP status for current user."""
+    enabled: bool
+    has_recovery_codes: bool
+
+
+# ============== Session Management Schemas (v3.7.0) ==============
+
+class SessionInfo(BaseModel):
+    """Information about a single session."""
+    id: str
+    device_id: str | None
+    ip_address: str | None
+    user_agent: str | None
+    last_activity: datetime | None
+    created_at: datetime
+    is_current: bool = False
+    
+    class Config:
+        from_attributes = True
+
+
+class SessionsListResponse(BaseModel):
+    """List of active sessions."""
+    sessions: list[SessionInfo]
+    total: int

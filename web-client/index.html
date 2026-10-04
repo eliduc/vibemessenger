@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<!-- КАО#011: UI is English; lang was "ru" --><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- КАО#012: allow pinch-zoom (removed maximum-scale/user-scalable=no for a11y) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VibeMessenger</title>
+    <link rel="stylesheet" href="style.css?v=3.11.45">
+    <link rel="stylesheet" href="poll-favorites-export.css?v=3.11.42"><!-- КАО#297: was the only asset with no ?v= — CDN caches by full URL, so edits to it could never be busted -->
+    <link rel="stylesheet" href="key-verification.css?v=3">
+    <link rel="stylesheet" href="account-backup.css?v=3.11.19">
+    <link rel="stylesheet" href="biometric-auth.css?v=3.10.0">
+    <meta name="theme-color" content="#2196F3">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="VibeMessenger">
+</head>
+<body>
+    <div id="app">
+        <!-- Offline Banner -->
+        <div id="offline-banner" class="offline-banner hidden">
+            <span class="offline-icon">📡</span>
+            <span class="offline-text">No connection</span>
+        </div>
+        <div id="auth-screen" class="screen active">
+            <div class="auth-container">
+                <div class="logo">🔐</div>
+                <h1>VibeMessenger</h1>
+                <p class="subtitle">End-to-end encrypted</p>
+                <form id="login-form" class="auth-form" onsubmit="return false" autocomplete="on">
+                    <input type="text" id="login-username" placeholder="Username" autocapitalize="off" inputmode="email" autocomplete="username" autocorrect="off" spellcheck="false">
+                    <div class="password-field">
+                        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('login-password', this)" tabindex="-1">👁</button>
+                    </div>
+                    <button id="login-btn" class="btn primary">Login</button>
+                    <div id="biometric-login-container" class="hidden">
+                        <div class="biometric-divider">or</div>
+                        <button id="biometric-login-btn" type="button" onclick="BiometricAuth.handleBiometricLogin()">👆 Sign in with Biometrics</button>
+                    </div>
+                    <p class="switch-text">No account? <a href="#" id="show-register">Register</a></p>
+                </form>
+                <form id="register-form" class="auth-form hidden" onsubmit="return false" autocomplete="on">
+                    <input type="text" id="reg-username" placeholder="Username" autocapitalize="off" inputmode="email" autocomplete="username" autocorrect="off" spellcheck="false">
+                    <input type="text" id="reg-display-name" placeholder="Display Name" autocomplete="name">
+                    <div class="password-field">
+                        <input type="password" id="reg-password" placeholder="Password" autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('reg-password', this)" tabindex="-1">👁</button>
+                    </div>
+                    <div class="password-field">
+                        <input type="password" id="reg-confirm" placeholder="Confirm Password" autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('reg-confirm', this)" tabindex="-1">👁</button>
+                    </div>
+                    <button id="register-btn" class="btn primary">Create Account</button>
+                    <p class="switch-text">Have account? <a href="#" id="show-login">Login</a></p>
+                </form>
+                <div id="auth-error" class="error hidden"></div>
+            </div>
+        </div>
+        <div id="chats-screen" class="screen">
+            <header class="header">
+                <h2 class="app-title">VibeMessenger</h2>
+                <div class="header-actions">
+                    <button id="global-search-btn" class="icon-btn" onclick="toggleGlobalSearch()" title="Search">🔍</button>
+                    <button id="favorites-btn" class="icon-btn" onclick="showFavoritesPanel()" title="Favorites">⭐</button>
+                    <button id="sound-toggle-btn" class="icon-btn" onclick="toggleSound()" title="Sound on">🔔</button>
+                    <button id="invites-btn" class="icon-btn invites-btn" aria-label="Invitations" onclick="showInvitesModal()">
+                        <span id="invites-icon" aria-hidden="true">📭</span>
+                        <span id="invites-badge" class="invites-badge hidden">0</span>
+                    </button>
+                    <button id="new-chat-btn" class="icon-btn" aria-label="New chat">+</button>
+                    <!-- v3.7.28: New Menu dropdown -->
+                    <div id="new-menu" class="dropdown-menu hidden" role="menu" aria-label="Create new"><!-- КАО#132 -->
+                        <div class="dropdown-item" role="menuitem" tabindex="0" onclick="showNewChatModal()">💬 New Chat</div>
+                        <div class="dropdown-item" role="menuitem" tabindex="0" onclick="showNewGroupModal()">👥 New Group</div>
+                        <div class="dropdown-item" role="menuitem" tabindex="0" onclick="showNewChannelModal()">📢 New Channel</div>
+                    </div>
+                    <button id="settings-btn" class="icon-btn" aria-label="Settings">⚙</button>
+                </div>
+            </header>
+            <div id="global-search-bar" class="global-search-bar hidden">
+                <input type="text" id="global-search-input" placeholder="Search messages..." oninput="handleGlobalSearchInput(event)">
+                <label class="search-exact-label">
+                    <input type="checkbox" id="global-search-exact" onchange="handleGlobalSearchInput(event)">
+                    <span>Exact</span>
+                </label>
+                <button class="search-clear-btn" onclick="clearGlobalSearch()">✕</button>
+            </div>
+            <div id="global-search-results" class="global-search-results hidden"></div>
+            <div id="chats-container" class="chats-container">
+                <div id="pull-indicator" class="pull-indicator">
+                    <div class="pull-spinner"></div>
+                    <span class="pull-text">Pull to refresh</span>
+                </div>
+                <div id="chats-list" class="chats-list"></div>
+            </div>
+            <div id="connection-status" class="connection-status">
+                <span class="status-dot"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+        </div>
+        <div id="chat-screen" class="screen">
+            <header class="header chat-header">
+                <button id="back-btn" class="icon-btn" aria-label="Back">←</button>
+                <div class="chat-header-avatar" id="chat-header-avatar" onclick="openCurrentChatProfile()" style="cursor: pointer;">U</div>
+                <img id="chat-header-avatar-img" class="chat-header-avatar-img hidden" src="" alt="Avatar" onclick="openCurrentChatProfile()" style="cursor: pointer;">
+                <div class="chat-info" id="chat-info-wrapper">
+                    <h3 id="chat-name" onclick="openCurrentChatProfile()" style="cursor: pointer;">User</h3>
+                    <div class="chat-status-row">
+                        <span id="chat-status">offline</span>
+                        <span id="e2ee-indicator" class="e2ee-badge hidden" title="End-to-end encrypted">🔐</span>
+                    </div>
+                    <div id="group-menu" class="group-menu hidden">
+                        <div class="group-menu-header">
+                            <span>Group members</span>
+                            <button class="group-menu-close" onclick="closeGroupMenu()">✕</button>
+                        </div>
+                        <div id="group-menu-members-list" class="group-members-list"></div>
+                        <div id="group-menu-invite-section" class="group-menu-invite-section"></div>
+                        <div id="group-menu-actions" class="group-menu-actions"></div>
+                    </div>
+                </div>
+                <button id="search-btn" class="icon-btn" aria-label="Search messages">🔍</button>
+                <button id="select-btn" class="icon-btn" onclick="toggleMultiSelectMode()" title="Select messages">☑️</button>
+                <button id="gallery-btn" class="icon-btn" onclick="showMediaGallery()" title="Media gallery">🖼️</button>
+                <button id="mute-btn" class="icon-btn" onclick="toggleMuteChat()" title="Mute chat">🔔</button>
+                <button id="export-btn" class="icon-btn" onclick="showExportModal()" title="Export chat">📤</button>
+                <div class="call-menu-wrapper">
+                    <button id="call-btn" class="icon-btn call-icon" aria-label="Call" onclick="toggleCallMenu()"><svg class="phone-icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>
+                    <div id="call-menu" class="call-menu hidden">
+                        <button onclick="startCall(false)" class="call-menu-item">
+                            <span class="call-menu-icon">🎤</span>
+                            <span>Voice call</span>
+                        </button>
+                        <button onclick="startCall(true)" class="call-menu-item">
+                            <span class="call-menu-icon">📹</span>
+                            <span>Video call</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- Search Bar -->
+            <div id="group-menu-overlay" class="group-menu-overlay hidden" onclick="closeGroupMenu()"></div>
+            <div id="search-bar" class="search-bar hidden">
+                <input type="text" id="search-input" placeholder="Search messages...">
+                <label class="search-exact-label">
+                    <input type="checkbox" id="search-exact" onchange="performSearch()">
+                    <span>Exact</span>
+                </label>
+                <span id="search-results-count" class="search-results-count"></span>
+                <button id="search-prev" class="search-nav-btn" onclick="searchPrev()">▲</button>
+                <button id="search-next" class="search-nav-btn" onclick="searchNext()">▼</button>
+                <button id="search-close" class="search-close-btn" onclick="closeSearch()">✕</button>
+            </div>
+            <!-- Pinned Message -->
+            <div id="pinned-message" class="pinned-message hidden"></div>
+            <div id="messages" class="messages"></div>
+            <!-- Reply Preview -->
+            <div id="reply-preview" class="reply-preview hidden">
+                <div class="reply-preview-content">
+                    <div class="reply-preview-author" id="reply-author">Author</div>
+                    <div class="reply-preview-text" id="reply-text">Message text</div>
+                </div>
+                <button class="reply-cancel-btn" onclick="cancelReply()">✕</button>
+            </div>
+            <!-- Markdown Preview -->
+            <div id="markdown-preview" class="markdown-preview hidden">
+                <div class="markdown-preview-label">Preview</div>
+                <div id="markdown-preview-content" class="markdown-preview-content"></div>
+            </div>
+            <div class="message-input">
+                <div id="mentions-popup" class="mentions-popup hidden">
+                    <div class="mentions-list" id="mentions-list"></div>
+                </div>
+                <button id="attach-btn" class="icon-btn attach-btn" aria-label="Attach file">📎</button>
+                <button id="poll-btn" class="icon-btn poll-btn" onclick="showCreatePollModal()" title="Create poll">📊</button>
+                <div class="disappearing-wrapper">
+                    <button id="disappearing-btn" class="icon-btn disappearing-btn" onclick="toggleDisappearingMenu()">⏱️</button>
+                    <div id="disappearing-menu" class="disappearing-menu hidden">
+                        <div class="disappearing-header">Disappearing message</div>
+                        <button onclick="setDisappearingTime(0)" class="disappearing-option" data-time="0">Off</button>
+                        <button onclick="setDisappearingTime(60)" class="disappearing-option" data-time="60">1 minute</button>
+                        <button onclick="setDisappearingTime(300)" class="disappearing-option" data-time="300">5 minutes</button>
+                        <button onclick="setDisappearingTime(3600)" class="disappearing-option" data-time="3600">1 hour</button>
+                        <button onclick="setDisappearingTime(86400)" class="disappearing-option" data-time="86400">24 hours</button>
+                        <button onclick="setDisappearingTime(604800)" class="disappearing-option" data-time="604800">7 days</button>
+                    </div>
+                </div>
+                <input type="text" id="message-text" placeholder="Message...">
+                <button id="voice-btn" class="voice-btn" aria-label="Record voice message">🎤</button>
+                <button id="send-btn" class="send-btn" aria-label="Send message">➤</button>
+                <div id="edit-actions" class="edit-actions hidden">
+                    <button id="cancel-edit-btn" class="btn cancel-btn" aria-label="Cancel edit">✕</button>
+                    <button id="save-edit-btn" class="send-btn" aria-label="Save edit">✓</button>
+                </div>
+            </div>
+            <div id="voice-recording" class="voice-recording hidden">
+                <button id="delete-voice" class="delete-voice-btn" aria-label="Delete recording">🗑</button>
+                <div class="recording-indicator">
+                    <span id="recording-dot" class="recording-dot"></span>
+                    <span id="recording-time">0:00</span>
+                </div>
+                <button id="pause-voice" class="pause-voice-btn" aria-label="Pause recording">⏸</button>
+                <button id="send-voice" class="send-btn" aria-label="Send voice message">➤</button>
+            </div>
+            <!-- v3.8.36: Batch actions panel for multi-select mode -->
+            <div id="batch-actions-panel" class="batch-actions-panel hidden">
+                <div class="batch-actions-info">
+                    <button class="batch-cancel-btn" onclick="exitMultiSelectMode()">✕</button>
+                    <span id="batch-selected-count">0 selected</span>
+                </div>
+                <div class="batch-actions-buttons">
+                    <button id="batch-favorite-btn" class="batch-btn" onclick="batchToggleFavorites()">
+                        <span class="batch-icon">⭐</span>
+                        <span>Toggle Favorites</span>
+                    </button>
+                    <button id="batch-delete-me-btn" class="batch-btn" onclick="batchDeleteForMe()">
+                        <span class="batch-icon">🗑</span>
+                        <span>Delete for me</span>
+                    </button>
+                    <button id="batch-delete-all-btn" class="batch-btn danger" onclick="batchDeleteForAll()">
+                        <span class="batch-icon">🗑</span>
+                        <span>Delete for all</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="settings-screen" class="screen">
+            <header class="header">
+                <button id="settings-back-btn" class="icon-btn">←</button>
+                <h2>Settings</h2>
+                <div class="header-actions"></div>
+            </header>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <div class="settings-user-info">
+                        <div class="settings-avatar-wrapper" onclick="triggerAvatarUpload()">
+                            <div class="settings-avatar" id="settings-avatar">U</div>
+                            <img id="settings-avatar-img" class="settings-avatar-img hidden" src="" alt="Avatar">
+                            <div class="avatar-upload-hint">📷</div>
+                        </div>
+                        <input type="file" id="avatar-input" accept="image/*" onchange="uploadAvatar(event)" hidden>
+                        <div class="settings-user-details">
+                            <div class="settings-display-name" id="settings-display-name">User</div>
+                            <div class="settings-username" id="settings-username">@username</div>
+                        </div>
+                    </div>
+                    <div id="avatar-message" class="local-settings-message hidden"></div>
+                </div>
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="theme-options">
+                        <button class="theme-option" data-theme="light" onclick="setTheme('light')">
+                            <span class="theme-option-icon">☀️</span>
+                            Light
+                        </button>
+                        <button class="theme-option" data-theme="system" onclick="setTheme('system')">
+                            <span class="theme-option-icon">💻</span>
+                            System
+                        </button>
+                        <button class="theme-option" data-theme="dark" onclick="setTheme('dark')">
+                            <span class="theme-option-icon">🌙</span>
+                            Dark
+                        </button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>🛡️ Privacy</h3>
+                    <div class="settings-row" id="screenshot-protection-row">
+                        <div class="settings-row-info">
+                            <span class="settings-row-label">Disable screenshots</span>
+                            <span class="settings-row-hint">Block screen capture on this device</span>
+                        </div>
+                        <div class="toggle-switch" id="screenshot-toggle" role="switch" aria-label="Screenshot protection" aria-checked="false" tabindex="0" onclick="toggleScreenshotProtection()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleScreenshotProtection();}"><!-- КАО#133: keyboard + aria-checked -->
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div id="privacy-message" class="local-settings-message hidden"></div>
+                </div>
+                <div class="settings-section">
+                    <h3>Change Password</h3>
+                    <button id="show-change-password-btn" class="btn primary" onclick="showChangePasswordModal()">Change Password</button>
+                </div>
+                <div class="settings-section">
+                    <div class="totp-header-row">
+                        <h3>Two-Factor Authentication</h3>
+                        <div id="totp-status" class="totp-status">
+                            <span id="totp-status-text">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="totp-disabled-section">
+                        <p class="totp-description">Add extra security using an authenticator app</p>
+                        <button id="setup-totp-btn" class="btn primary" onclick="setupTOTP()">Enable 2FA</button>
+                    </div>
+                    <div id="totp-enabled-section" class="hidden">
+                        <div class="totp-enabled-actions">
+                            <button id="regenerate-codes-btn" class="btn" onclick="showRegenerateCodesModal()">Regenerate Recovery Codes</button>
+                            <button id="disable-totp-btn" class="btn danger" onclick="showDisableTOTPModal()">Disable 2FA</button>
+                        </div>
+                    </div>
+                    <div id="totp-message" class="local-settings-message hidden"></div>
+                </div>
+                <!-- Biometric / Passkeys Section (v3.10.0) -->
+                <div class="settings-section" id="biometric-settings-section">
+                    <h3>👆 Biometric Authentication</h3>
+                    <p class="biometric-description">Sign in with fingerprint, face, or device PIN</p>
+                    <div id="biometric-settings-content">
+                        <p class="biometric-not-available">Checking availability...</p>
+                    </div>
+                    <div id="biometric-message" class="local-settings-message hidden"></div>
+                </div>
+                <!-- Account Backup Section -->
+                <div class="settings-section account-backup-section" id="account-backup-section">
+                    <h3>💾 Account Backup</h3>
+                    <p class="account-backup-description">
+                        Create encrypted backup of keys, chats and settings
+                    </p>
+                    <div class="account-backup-status" id="account-backup-status">
+                        <span class="status-label">Last backup:</span>
+                        <span class="status-value" id="last-backup-date">Never</span>
+                    </div>
+                    <div class="account-backup-buttons">
+                        <button class="btn btn-export" onclick="AccountBackupUI.showCreateBackupModal()">
+                            <span>💾</span> Export
+                        </button>
+                        <button class="btn btn-import" onclick="AccountBackupUI.showRestoreBackupModal()">
+                            <span>📥</span> Import
+                        </button>
+                    </div>
+                    <div id="backup-message" class="local-settings-message hidden"></div>
+                </div>
+                <!-- Sessions Management Section (v3.7.0) -->
+                <div class="settings-section sessions-section">
+                    <h3>🔐 Active Sessions</h3>
+                    <p class="sessions-description">
+                        Manage logged-in devices. Terminate unfamiliar sessions and change your password.
+                    </p>
+                    <div id="sessions-list" class="sessions-list">
+                        <div class="loading-sessions">Loading sessions...</div>
+                    </div>
+                    <div class="sessions-actions">
+                        <button class="btn btn-danger-outline" onclick="terminateOtherSessions()">
+                            Terminate All Other Sessions
+                        </button>
+                    </div>
+                    <div id="sessions-message" class="local-settings-message hidden"></div>
+                </div>
+                <div class="settings-section">
+                    <button id="reset-e2ee-btn" class="btn" onclick="resetE2EEWithConfirm()" style="margin-bottom: 10px; background: #ff9800; color: white;">🔐 Reset E2EE keys</button>
+                    <button id="logout-btn" class="btn logout-btn">Logout</button>
+                    <div class="app-version">v. 3.11.65</div><!-- КАО#013/sug#78: keep in sync with deployed assets -->
+                </div>
+            </div>
+        </div>
+        <div id="new-chat-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>New Chat</h3>
+                <input type="text" id="new-chat-username" placeholder="Enter username" autocapitalize="off" inputmode="email" autocorrect="off" spellcheck="false">
+                <div class="modal-actions">
+                    <button id="cancel-new-chat" class="btn">Cancel</button>
+                    <button id="confirm-new-chat" class="btn primary">Start</button>
+                </div>
+            </div>
+        </div>
+        <!-- TOTP Login Modal -->
+        <div id="totp-login-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Two-Factor Authentication</h3>
+                <p class="totp-prompt">Enter the 6-digit code from your authenticator app</p>
+                <input type="text" id="totp-login-code" class="totp-input" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+                <p class="totp-recovery-hint">Lost access? <a href="#" onclick="showRecoveryCodeInput(); return false;">Use recovery code</a></p>
+                <div id="recovery-code-section" class="hidden">
+                    <input type="text" id="recovery-code-input" class="recovery-input" placeholder="Enter recovery code" autocomplete="off">
+                </div>
+                <!-- КАО#328: this error element was MISSING, so showTOTPLoginModal() threw on
+                     getElementById('totp-login-error').classList and the 2FA prompt never opened —
+                     users with 2FA could not sign in even after КАО#317 made the server response detectable. -->
+                <div id="totp-login-error" class="error hidden"></div>
+                <div class="modal-actions">
+                    <!-- КАО#328: these called cancelTOTPLogin()/verifyTOTPLogin(), which do not exist. -->
+                    <button class="btn" onclick="hideTOTPLoginModal()">Cancel</button>
+                    <button class="btn primary" onclick="submitTOTPLogin()">Verify</button>
+                </div>
+            </div>
+        </div>
+        <!-- TOTP Setup Modal -->
+        <div id="totp-setup-modal" class="modal hidden">
+            <div class="modal-content totp-setup-content">
+                <h3>Set Up Two-Factor Authentication</h3>
+                <div id="totp-setup-step1">
+                    <p>Scan this QR code with your authenticator app:</p>
+                    <div id="totp-qr-container" class="totp-qr-container"></div>
+                    <p class="totp-manual-hint">Or enter this code manually:</p>
+                    <code id="totp-secret-code" class="totp-secret"></code>
+                    <button class="btn" onclick="showTOTPStep2()">Next</button>
+                </div>
+                <div id="totp-setup-step2" class="hidden">
+                    <p>Enter the 6-digit code from your authenticator app to verify:</p>
+                    <input type="text" id="totp-verify-code" class="totp-input" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]*">
+                    <!-- КАО#347: app.js writes validation errors here; without it setup threw a TypeError -->
+                    <div id="totp-setup-error" class="error hidden"></div>
+                    <div class="modal-actions">
+                        <button class="btn" onclick="closeTOTPSetup()">Cancel</button>
+                        <button class="btn primary" onclick="verifyTOTPSetup()">Enable 2FA</button>
+                    </div>
+                </div>
+                <div id="totp-setup-step3" class="hidden">
+                    <p class="success-text">✓ Two-factor authentication enabled!</p>
+                    <p>Save these recovery codes in a safe place. You can use them to access your account if you lose your authenticator:</p>
+                    <div id="recovery-codes" class="recovery-codes"></div>
+                    <button class="btn" onclick="copyRecoveryCodes()">Copy Codes</button>
+                    <button class="btn primary" onclick="closeTOTPSetup()">Done</button>
+                </div>
+            </div>
+        </div>
+        <!-- Disable TOTP Modal -->
+        <div id="disable-totp-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Disable Two-Factor Authentication</h3>
+                <p>Enter your current password to disable 2FA:</p>
+                <form onsubmit="return false" autocomplete="on">
+                <input type="text" autocomplete="username" style="display:none" aria-hidden="true">
+                <input type="password" id="disable-totp-password" placeholder="Current password" autocomplete="current-password">
+                </form>
+                <!-- КАО#347: /auth/totp/disable requires a code as well as the password; there was no field
+                     for it, so disabling 2FA could not work even once the ids matched. -->
+                <p>And the 6-digit code from your authenticator app (or a recovery code):</p>
+                <input type="text" id="disable-totp-code" class="totp-input" maxlength="14" placeholder="000000" autocomplete="one-time-code">
+                <div id="disable-totp-error" class="error hidden"></div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="closeDisableTOTPModal()">Cancel</button>
+                    <button class="btn danger" onclick="confirmDisableTOTP()">Disable 2FA</button>
+                </div>
+            </div>
+        </div>
+        <!-- Regenerate Recovery Codes Modal -->
+        <div id="regenerate-codes-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Regenerate Recovery Codes</h3>
+                <p>Enter the 6-digit code from your authenticator app:</p>
+                <input type="text" id="regenerate-totp-code" class="totp-input" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]*">
+                <div id="regenerate-totp-error" class="error hidden"></div><!-- КАО#347 -->
+                <div id="new-recovery-codes" class="recovery-codes hidden"></div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="closeRegenerateCodesModal()">Cancel</button>
+                    <button id="regenerate-codes-confirm-btn" class="btn primary" onclick="confirmRegenerateCodes()">Regenerate</button>
+                </div>
+            </div>
+        </div>
+        <!-- Change Password Modal -->
+        <div id="change-password-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Change Password</h3>
+                <form onsubmit="return false" autocomplete="on">
+                <input type="text" autocomplete="username" style="display:none" aria-hidden="true">
+                <input type="password" id="current-password" placeholder="Current password" autocomplete="current-password">
+                <input type="password" id="new-password" placeholder="New password (min 8 chars)" autocomplete="new-password">
+                <input type="password" id="confirm-new-password" placeholder="Confirm new password" autocomplete="new-password">
+                </form>
+                <div id="change-password-message" class="local-settings-message hidden"></div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="closeChangePasswordModal()">Cancel</button>
+                    <button id="change-password-btn" class="btn primary" onclick="changePassword()">Change Password</button>
+                </div>
+            </div>
+        </div>
+        <div id="new-group-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>New Group</h3>
+                <input type="text" id="new-group-name" placeholder="Group name">
+                <p class="modal-section-title">Add members (optional):</p>
+                <input type="text" id="group-members-search" placeholder="Search contacts..." oninput="filterGroupMembersList()">
+                <div id="group-members-list" class="group-members-select"></div>
+                <div class="modal-actions">
+                    <button id="cancel-new-group" class="btn" onclick="hideNewGroupModal()">Cancel</button>
+                    <button id="confirm-new-group" class="btn primary" onclick="createGroup()">Create</button>
+                </div>
+            </div>
+        </div>
+        <!-- Channel creation modal (v3.11.10) -->
+        <div id="new-channel-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>📢 New Channel</h3>
+                <input type="text" id="new-channel-name" placeholder="Channel name" maxlength="100">
+                <input type="text" id="new-channel-desc" placeholder="Description (optional)" maxlength="500">
+                <div class="modal-actions">
+                    <button class="btn" onclick="hideNewChannelModal()">Cancel</button>
+                    <button class="btn primary" onclick="createChannel()">Create</button>
+                </div>
+            </div>
+        </div>
+        <!-- Typing indicator -->
+        <div id="typing-indicator" class="typing-indicator hidden">
+            <span class="typing-text"></span>
+            <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+        </div>
+        <!-- Favorites panel -->
+        <div id="favorites-panel" class="favorites-panel">
+            <div class="favorites-header">
+                <h3>⭐ Favorites</h3>
+                <button class="close-btn" onclick="closeFavoritesPanel()">✕</button>
+            </div>
+            <div id="favorites-list" class="favorites-list"></div>
+        </div>
+        <!-- КАО#310: the static Export modal was removed. showExportModal() builds its own overlay that
+             also uses id="export-modal", and this static copy came FIRST in the DOM, so
+             doExport()'s getElementById('export-modal') read THIS dead form instead of the visible one —
+             silently exporting the defaults (current chat / JSON / no media) whatever the user picked.
+             It was unreachable anyway: its Export button called performExport(), which does not exist. -->
+        <!-- Poll Modal is created dynamically by showCreatePollModal() in app.js -->
+        <!-- КАО#381: the "Send file" caption modal was removed. #file-preview-modal had ZERO references
+             across every loaded script, so nothing could ever open it, and both of its buttons called
+             functions that do not exist (cancelFilePreview / sendFileWithCaption) — clicking either threw.
+             Captions are not part of the send path at all: sendFile() uploads immediately. This was leftover
+             markup for a feature that was never wired, so it is deleted rather than implemented — inventing
+             behaviour nobody specified is the worse of the two options. (Already removed on prod as КАО#348;
+             stage had fallen behind.) -->
+        <!-- Message Menu -->
+        <div id="message-menu-overlay" class="menu-overlay hidden" onclick="hideMessageMenu()"></div>
+        <div id="message-menu" class="message-menu hidden">
+            <div class="message-menu-content">
+                <div class="reaction-picker">
+                    <button class="reaction-emoji" onclick="addReaction('👍')">👍</button>
+                    <button class="reaction-emoji" onclick="addReaction('❤️')">❤️</button>
+                    <button class="reaction-emoji" onclick="addReaction('😂')">😂</button>
+                    <button class="reaction-emoji" onclick="addReaction('😮')">😮</button>
+                    <button class="reaction-emoji" onclick="addReaction('😢')">😢</button>
+                    <button class="reaction-emoji" onclick="addReaction('🔥')">🔥</button>
+                </div>
+                <button id="menu-reply-btn" class="menu-btn" onclick="startReplyMessage()">
+                    <span class="menu-icon">↩️</span> Reply
+                </button>
+                <button id="menu-copy-btn" class="menu-btn" onclick="copyMessageText()">
+                    <span class="menu-icon">📋</span> Copy
+                </button>
+                <button class="menu-btn" onclick="showForwardModal()">
+                    <span class="menu-icon">↗️</span> Forward
+                </button>
+                <button id="menu-pin-btn" class="menu-btn" onclick="pinSelectedMessage()">
+                    <span class="menu-icon">📌</span> Pin
+                </button>
+                <button id="menu-unpin-btn" class="menu-btn hidden" onclick="unpinSelectedMessage()">
+                    <span class="menu-icon">📌</span> Unpin
+                </button>
+                <button id="menu-favorite-btn" class="menu-btn" onclick="toggleFavoriteFromMenu()">
+                    <span class="menu-icon">⭐</span> Add to favorites
+                </button>
+                <button id="menu-edit-btn" class="menu-btn" onclick="startEditMessage()">
+                    <span class="menu-icon">✏️</span> Edit
+                </button>
+                <button id="menu-delete-me-btn" class="menu-btn" onclick="deleteMessageForMe()">
+                    <span class="menu-icon">🗑</span> Delete for me
+                </button>
+                <button id="menu-delete-all-btn" class="menu-btn danger" onclick="deleteMessageForAll()">
+                    <span class="menu-icon">🗑</span> Delete for everyone
+                </button>
+                <button class="menu-btn cancel" onclick="hideMessageMenu()">Cancel</button>
+            </div>
+        </div>
+        <!-- Reaction Users Modal -->
+        <div id="reaction-users-modal" class="modal hidden" onclick="hideReactionUsersModal()">
+            <div class="modal-content reaction-users-content" onclick="event.stopPropagation()">
+                <h3 id="reaction-users-title">👍 Reactions</h3>
+                <div id="reaction-users-list" class="reaction-users-list"></div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="hideReactionUsersModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        <!-- Forward Message Modal -->
+        <div id="forward-modal" class="modal hidden" onclick="hideForwardModal()">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <h3>Forward to</h3>
+                <p class="forward-hint">Tap a chat to forward</p>
+                <div id="forward-chat-list" class="forward-chat-list"></div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="hideForwardModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <!-- Invites Modal -->
+        <div id="invites-modal" class="modal hidden" onclick="hideInvitesModal()">
+            <div class="modal-content invites-modal-content" onclick="event.stopPropagation()">
+                <h3>Group Invitations</h3>
+                <div id="invites-list" class="invites-list">
+                    <p class="empty-invites">No pending invitations</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="hideInvitesModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        <!-- Call Modal -->
+        <div id="call-modal" class="call-modal">
+            <div class="call-content">
+                <div id="call-status" class="call-status">Calling...</div>
+                <div id="call-name" class="call-name">User</div>
+                <div id="call-timer" class="call-timer hidden">00:00</div>
+                <audio id="remote-audio" autoplay playsinline></audio>
+                <div class="call-actions">
+                    <button id="call-accept" class="call-btn accept hidden" aria-label="Accept call" onclick="acceptCall()">📞</button>
+                    <button id="call-reject" class="call-btn reject" aria-label="Reject or end call" onclick="endCall()">📵</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="pq-kem.js?v=3.11.0"></script>
+    <script src="vibe-crypto.js?v=3.11.65"></script>
+    <script src="app.js?v=3.11.65"></script>
+    <script src="biometric-auth.js?v=3.11.30"></script>
+        <!-- Add Member Modal -->
+        <div id="add-member-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add member</h3>
+                    <button class="modal-close" onclick="closeAddMemberModal()">✕</button>
+                </div>
+                <input type="text" id="add-member-search" class="modal-search" placeholder="Search contacts..." oninput="filterAddMemberList()">
+                <div id="add-member-list" class="add-member-list"></div>
+            </div>
+        </div>
+        <!-- Media Gallery Modal -->
+        <div id="media-gallery-modal" class="modal hidden" onclick="closeMediaGallery()">
+            <div class="modal-content media-gallery-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>Media gallery</h3>
+                    <div class="gallery-tabs">
+                        <button class="gallery-tab active" data-type="images" onclick="filterGallery('images')">🖼️ Photos</button>
+                        <button class="gallery-tab" data-type="videos" onclick="filterGallery('videos')">🎬 Videos</button>
+                        <button class="gallery-tab" data-type="files" onclick="filterGallery('files')">📎 Files</button>
+                    </div>
+                    <button class="modal-close" onclick="closeMediaGallery()">✕</button>
+                </div>
+                <div id="media-gallery-grid" class="media-gallery-grid">
+                    <p class="gallery-empty">No media</p>
+                </div>
+            </div>
+        </div>
+        <!-- Media Lightbox -->
+        <div id="media-lightbox" class="media-lightbox hidden" onclick="closeLightbox()">
+            <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+            <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); lightboxPrev()">❮</button>
+            <div class="lightbox-content" onclick="event.stopPropagation()">
+                <img id="lightbox-image" src="" alt="Opened image"><!-- КАО#131 -->
+                <video id="lightbox-video" controls style="display:none"></video>
+            </div>
+            <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); lightboxNext()">❯</button>
+            <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
+        </div>
+        <!-- User Profile Modal (for blocking) -->
+        <div id="user-profile-modal" class="modal hidden" onclick="closeUserProfileModal()">
+            <div class="modal-content user-profile-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>User profile</h3>
+                    <button class="modal-close" onclick="closeUserProfileModal()">✕</button>
+                </div>
+                <div class="user-profile-content">
+                    <div class="user-profile-avatar" id="profile-avatar">U</div>
+                    <div class="user-profile-name" id="profile-name">Username</div>
+                    <div class="user-profile-status" id="profile-status">offline</div>
+                </div>
+                <div class="user-profile-actions">
+                    <button class="btn btn-secondary" onclick="startChatFromProfile()">💬 Message</button>
+                    <button class="btn" id="profile-verify-btn" onclick="KeyVerificationUI.open(currentProfileUserId, document.getElementById('profile-name').textContent)">🔐 Verify keys</button>
+                    <button class="btn btn-danger" id="profile-block-btn" onclick="toggleBlockUser()">🚫 Block</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Universal Confirm Modal -->
+        <div id="universal-confirm-modal" class="modal hidden">
+            <div class="modal-content universal-dialog">
+                <div class="dialog-icon">⚠️</div>
+                <h3 id="confirm-title">Confirm Action</h3>
+                <p id="confirm-message">Are you sure?</p>
+                <div class="modal-actions">
+                    <button id="confirm-cancel-btn" class="btn">Cancel</button>
+                    <button id="confirm-ok-btn" class="btn danger">OK</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Universal Alert Modal -->
+        <div id="universal-alert-modal" class="modal hidden">
+            <div class="modal-content universal-dialog">
+                <div class="dialog-icon" id="alert-icon">ℹ️</div>
+                <h3 id="alert-title">Notice</h3>
+                <p id="alert-message">Message</p>
+                <div class="modal-actions">
+                    <button id="alert-ok-btn" class="btn primary">OK</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Verification Modal (создаётся динамически в key-verification-ui.js) -->
+        
+    <!-- Key Verification Scripts -->
+    <script src="qrcode.min.js"></script>
+    <script src="vibe-crypto-verification.js?v=3.11.35"></script>
+    <script src="key-verification-ui.js?v=3.11.40"></script>
+    <!-- Экспорт / Импорт аккаунта Script -->
+    <script src="account-backup.js?v=3.11.17"></script>
+</body>
+</html>

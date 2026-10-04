@@ -1,0 +1,460 @@
+/**
+ * VibeMessenger Biometric Authentication Styles
+ * Version: 3.10.0
+ *
+ * Covers:
+ * - Login screen biometric button
+ * - Settings passkey management section
+ * - App lock overlay
+ * - Prompt/password fallback dialogs
+ */
+
+/* ============== Login Screen: Biometric Button ============== */
+
+#biometric-login-container {
+    margin-top: 4px;
+}
+
+#biometric-login-container.hidden {
+    display: none;
+}
+
+.biometric-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.biometric-divider::before,
+.biometric-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+#biometric-login-btn {
+    width: 100%;
+    padding: 14px 24px;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--primary);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#biometric-login-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+#biometric-login-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============== Settings: Passkeys Section ============== */
+
+.biometric-not-available {
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+    padding: 12px 0;
+}
+
+.biometric-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.biometric-credentials-list {
+    background: var(--bg);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.biometric-credential-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s;
+}
+
+.biometric-credential-item:last-child {
+    border-bottom: none;
+}
+
+.biometric-credential-item:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .biometric-credential-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.credential-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.credential-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.credential-details {
+    min-width: 0;
+}
+
+.credential-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.credential-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.credential-actions {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.credential-actions .icon-btn {
+    font-size: 14px;
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.credential-actions .icon-btn:hover {
+    background: var(--border);
+}
+
+/* ============== Settings: App Lock Options ============== */
+
+.biometric-lock-settings {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.biometric-lock-settings h4 {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.biometric-lock-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.biometric-lock-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.lock-option {
+    flex: 1;
+    min-width: 55px;
+    padding: 8px 10px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.lock-option:hover {
+    border-color: var(--primary);
+}
+
+.lock-option.active {
+    border-color: var(--primary);
+    background: var(--sent);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ============== App Lock Overlay ============== */
+
+.biometric-lock-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    animation: lockFadeIn 0.3s ease;
+}
+
+@keyframes lockFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.biometric-lock-content {
+    text-align: center;
+    padding: 32px;
+    max-width: 320px;
+    width: 100%;
+}
+
+.biometric-lock-content .lock-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: lockPulse 2s ease-in-out infinite;
+}
+
+@keyframes lockPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.biometric-lock-content h2 {
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.biometric-lock-content .lock-subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 32px;
+}
+
+.lock-unlock-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 17px;
+    margin-bottom: 12px;
+}
+
+.lock-unlock-btn .unlock-icon {
+    font-size: 20px;
+}
+
+.lock-error {
+    color: var(--error);
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #ffebee;
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .lock-error {
+    background: rgba(244, 67, 54, 0.15);
+}
+
+.lock-error.hidden {
+    display: none;
+}
+
+.lock-logout-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 12px 24px;
+}
+
+.lock-logout-btn:hover {
+    color: var(--error);
+}
+
+/* ============== Prompt Dialog (Input) ============== */
+
+.biometric-prompt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.biometric-prompt-dialog {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 340px;
+    width: calc(100% - 32px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.biometric-prompt-dialog h3 {
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.biometric-prompt-dialog p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.biometric-prompt-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    margin-bottom: 16px;
+}
+
+.biometric-prompt-input:focus {
+    border-color: var(--primary);
+}
+
+/* ============== Password Fallback Dialog ============== */
+
+.biometric-password-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    animation: fadeIn 0.2s ease;
+}
+
+.biometric-password-dialog {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 340px;
+    width: calc(100% - 32px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.biometric-password-dialog .dialog-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+.biometric-password-dialog h3 {
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.biometric-password-dialog p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.biometric-password-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    margin-bottom: 16px;
+}
+
+.biometric-password-input:focus {
+    border-color: var(--primary);
+}
+
+.biometric-password-error {
+    color: var(--error);
+    font-size: 13px;
+    margin-top: -8px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.biometric-password-error.hidden {
+    display: none;
+}
+
+/* ============== Settings Section Description ============== */
+
+.biometric-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+/* ============== Shared modal-actions (reuse from app) ============== */
+
+.biometric-prompt-dialog .modal-actions,
+.biometric-password-dialog .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.biometric-prompt-dialog .modal-actions .btn,
+.biometric-password-dialog .modal-actions .btn {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 15px;
+}

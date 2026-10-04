@@ -1,0 +1,262 @@
+/* Key Verification Styles - v3.6.3 */
+
+/* Emoji Fingerprint Display */
+.emoji-fingerprint {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0;
+    padding: 10px 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.emoji-fingerprint .emoji {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transition: transform 0.2s ease;
+}
+
+.emoji-fingerprint .emoji:hover {
+    transform: scale(1.15);
+}
+
+/* Safety Number Display */
+.safety-number-container {
+    margin: 10px 0;
+    padding: 10px;
+    background: var(--bg-tertiary, #1a1a2e);
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #333);
+}
+
+.safety-number-label {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.safety-number {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 0.95rem;
+    color: #fff;
+    text-align: center;
+    line-height: 1.6;
+    word-spacing: 4px;
+    letter-spacing: 0.5px;
+}
+
+.safety-number-block {
+    display: inline-block;
+    padding: 3px 6px;
+    margin: 2px;
+    background: var(--bg-secondary, #252540);
+    border-radius: 5px;
+    font-weight: 500;
+    color: #e0e0e0;
+}
+
+/* QR Code Section */
+.qr-code-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    padding: 12px;
+    background: #fff;
+    border-radius: 10px;
+}
+
+.qr-code-container canvas {
+    display: block;
+    margin: 0 auto;
+    border-radius: 6px;
+}
+
+.qr-code-label {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #666;
+    text-align: center;
+}
+
+/* Verification Modal */
+#key-verification-modal .modal-content {
+    max-width: 380px;
+    max-height: 95vh;
+    overflow-y: auto;
+    background: var(--bg-primary, #0f0f23);
+    padding: 15px;
+}
+
+#key-verification-modal .modal-header {
+    border-bottom: 1px solid var(--border-color, #333);
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+}
+
+#key-verification-modal .modal-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+}
+
+#key-verification-modal .modal-header h3::before {
+    content: '🔐';
+}
+
+#key-verification-modal .modal-body {
+    padding: 5px 0;
+}
+
+/* Verification Status */
+.verification-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.verification-status.verified {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+    border: 1px solid rgba(39, 174, 96, 0.3);
+}
+
+.verification-status.unverified {
+    background: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+/* Verify Checkbox */
+.verify-checkbox-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    margin: 8px 0;
+    background: var(--bg-tertiary, #1a1a2e);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.verify-checkbox-container:hover {
+    background: var(--bg-secondary, #252540);
+}
+
+.verify-checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    accent-color: #667eea;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.verify-checkbox-container label {
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    line-height: 18px;
+}
+
+/* Buttons */
+#key-verification-modal .btn-verify {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#key-verification-modal .btn-verify:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+#key-verification-modal .btn-verify:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Instructions */
+.verification-instructions {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #888);
+    text-align: center;
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.verification-instructions strong {
+    color: var(--text-primary, #fff);
+}
+
+/* Profile Button */
+#profile-verify-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+}
+
+#profile-verify-btn:hover {
+    transform: scale(1.02);
+}
+
+/* Responsive - extra small screens */
+@media (max-width: 400px) {
+    .emoji-fingerprint {
+        gap: 4px;
+        padding: 8px 6px;
+    }
+    
+    .emoji-fingerprint .emoji {
+        font-size: 1.3rem;
+    }
+    
+    .safety-number {
+        font-size: 0.85rem;
+    }
+    
+    .safety-number-block {
+        padding: 2px 4px;
+        margin: 1px;
+    }
+    
+    #key-verification-modal .modal-content {
+        max-width: 95vw;
+        padding: 10px;
+    }
+}

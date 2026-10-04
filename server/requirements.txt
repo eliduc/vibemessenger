@@ -1,0 +1,51 @@
+# Secure Messenger Server Dependencies
+# Python 3.11+
+# КАО#170 (min#76/77): pinned to the versions currently running on stage for reproducible builds
+# (was lower-bound-only >=, which let CVE-prone versions drift in on each rebuild).
+# To refresh: `pip install -U ...`, test, then re-freeze. Consider a lock file (pip-compile) long-term.
+
+# Web Framework
+fastapi==0.137.1
+uvicorn[standard]==0.49.0
+websockets==16.0
+
+# Database
+sqlalchemy==2.0.51
+aiosqlite==0.22.1    # For SQLite async (development)
+asyncpg==0.31.0      # For PostgreSQL async (production)
+
+# Validation & Settings
+pydantic==2.13.4
+pydantic-settings==2.14.1
+
+# Security
+python-jose[cryptography]==3.5.0   # NOTE: pulls transitive 'ecdsa' (==0.19.2); audit flagged jose/ecdsa as maintenance/CVE-prone — revisit
+argon2-cffi==25.1.0
+cryptography==49.0.0
+pyotp==2.10.0
+qrcode[pil]==8.2
+
+# Async utilities
+aiofiles==25.1.0
+httpx==0.28.1
+
+# Rate limiting
+slowapi==0.1.10
+
+# Push notifications
+pywebpush==2.3.0
+
+# WebAuthn / Passkeys
+webauthn==2.8.0
+
+# File handling
+python-multipart==0.0.32
+
+# Development
+python-dotenv==1.2.2
+
+# Testing
+pytest==9.1.0
+pytest-asyncio==1.4.0
+pytest-cov==7.1.0
+psutil==7.2.2

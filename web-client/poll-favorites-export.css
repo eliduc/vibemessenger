@@ -1,0 +1,657 @@
+/* ==================== POLL/FAVORITES/EXPORT STYLES ==================== */
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-overlay .modal {
+    background: white !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 400px !important;
+    max-height: 80vh !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.modal-overlay .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 20px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    background: #f5f5f5 !important;
+    flex-shrink: 0 !important;
+}
+
+.modal-overlay .modal-header h3 {
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+}
+
+.modal-overlay .modal-close {
+    background: none !important;
+    border: none !important;
+    font-size: 28px !important;
+    cursor: pointer !important;
+    color: #666 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.modal-overlay .modal-close:hover {
+    color: #333 !important;
+}
+
+.modal-overlay .modal-body {
+    padding: 20px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+}
+
+.modal-overlay .modal-footer {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    padding: 16px 20px !important;
+    border-top: 1px solid #e0e0e0 !important;
+    background: #f5f5f5 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Form Elements */
+.modal-overlay .form-group {
+    margin-bottom: 20px !important;
+}
+
+.modal-overlay .form-group label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+.modal-overlay .form-group input[type="text"],
+.modal-overlay #poll-question {
+    width: 100% !important;
+    padding: 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+    background: white !important;
+}
+
+.modal-overlay .form-group input[type="text"]:focus,
+.modal-overlay #poll-question:focus {
+    outline: none !important;
+    border-color: #4a90d9 !important;
+}
+
+/* Poll Options */
+#poll-options {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+}
+
+.poll-option-input {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+}
+
+.poll-option-input input {
+    flex: 1 !important;
+    padding: 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+}
+
+.poll-option-input input:focus {
+    outline: none !important;
+    border-color: #4a90d9 !important;
+}
+
+.remove-option-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border: none !important;
+    background: #ff4444 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    font-size: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.add-option-btn {
+    background: none !important;
+    border: 2px dashed #4a90d9 !important;
+    color: #4a90d9 !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    margin-top: 8px !important;
+}
+
+.add-option-btn:hover {
+    background: rgba(74, 144, 217, 0.1) !important;
+}
+
+/* Poll Settings */
+.poll-settings {
+    margin-top: 20px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid #eee !important;
+}
+
+.checkbox-label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+}
+
+.poll-expiry {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+}
+
+.poll-expiry label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 14px !important;
+    color: #333 !important;
+    cursor: pointer !important;
+}
+
+.poll-expiry select {
+    padding: 8px 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    background: white !important;
+}
+
+.poll-expiry select:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* Buttons */
+.modal-overlay .btn {
+    padding: 12px 24px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
+}
+
+.modal-overlay .btn-primary {
+    background: #4a90d9 !important;
+    color: white !important;
+}
+
+.modal-overlay .btn-primary:hover {
+    background: #3a7bc8 !important;
+}
+
+.modal-overlay .btn-secondary {
+    background: #e0e0e0 !important;
+    color: #333 !important;
+}
+
+.modal-overlay .btn-secondary:hover {
+    background: #d0d0d0 !important;
+}
+
+/* Poll in Message */
+.poll-container {
+    background: #f8f9fa !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    margin-top: 8px !important;
+    max-width: 300px !important;
+}
+
+.poll-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 10px !important;
+    font-size: 11px !important;
+    color: #888 !important;
+}
+
+.poll-type {
+    font-size: 11px !important;
+}
+
+.poll-status {
+    font-size: 11px !important;
+    color: #e67e22 !important;
+}
+
+.poll-options {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+.poll-container .poll-option {
+    position: relative !important;
+    background: white !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    transition: all 0.2s !important;
+}
+
+.poll-container .poll-option:hover:not(.disabled) {
+    border-color: #4a90d9 !important;
+}
+
+.poll-container .poll-option.selected {
+    border-color: #4a90d9 !important;
+    background: #e8f4fd !important;
+}
+
+.poll-container .poll-option.disabled {
+    cursor: default !important;
+    opacity: 0.8 !important;
+}
+
+.poll-option-bar {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    height: 100% !important;
+    background: rgba(74, 144, 217, 0.15) !important;
+    transition: width 0.3s ease !important;
+    z-index: 0 !important;
+}
+
+.poll-option-content {
+    position: relative !important;
+    z-index: 1 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.poll-option-text {
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+.poll-option-stats {
+    font-size: 12px !important;
+    color: #666 !important;
+}
+
+.poll-check {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #4a90d9 !important;
+    font-weight: bold !important;
+    z-index: 2 !important;
+}
+
+.poll-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-top: 10px !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #eee !important;
+}
+
+.poll-total {
+    font-size: 12px !important;
+    color: #888 !important;
+}
+
+.poll-retract,
+.poll-close {
+    font-size: 11px !important;
+    color: #4a90d9 !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 4px 8px !important;
+}
+
+.poll-retract:hover,
+.poll-close:hover {
+    text-decoration: underline !important;
+}
+
+/* Favorites Panel */
+.side-panel {
+    position: fixed !important;
+    top: 0 !important;
+    right: -100% !important;
+    width: 100% !important;
+    max-width: 400px !important;
+    height: 100% !important;
+    background: white !important;
+    z-index: 9999 !important;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
+    transition: right 0.3s ease !important;
+}
+
+.side-panel.open {
+    right: 0 !important;
+}
+
+.panel-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    background: #075e54 !important;
+    color: white !important;
+}
+
+.panel-header h3 {
+    margin: 0 !important;
+    flex: 1 !important;
+    font-size: 18px !important;
+}
+
+.panel-header .back-btn {
+    background: none !important;
+    border: none !important;
+    color: white !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    padding: 8px !important;
+}
+
+.panel-content {
+    height: calc(100% - 60px) !important;
+    overflow-y: auto !important;
+    padding: 12px !important;
+}
+
+.favorite-item {
+    position: relative !important;
+    background: #f8f9fa !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
+    margin-bottom: 10px !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
+}
+
+.favorite-item:hover {
+    background: #e8f4fd !important;
+}
+
+.favorite-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 6px !important;
+}
+
+.favorite-sender {
+    font-weight: 600 !important;
+    color: #075e54 !important;
+    font-size: 14px !important;
+}
+
+.favorite-date {
+    font-size: 12px !important;
+    color: #888 !important;
+}
+
+.favorite-preview {
+    font-size: 14px !important;
+    color: #555 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.favorite-remove {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 26px !important;
+    height: 26px !important;
+    border: none !important;
+    background: #ff4444 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.favorite-item:hover .favorite-remove {
+    opacity: 1 !important;
+}
+
+.empty-state {
+    text-align: center !important;
+    padding: 40px 20px !important;
+    color: #888 !important;
+    font-size: 14px !important;
+}
+
+/* Message highlight */
+.message.highlight {
+    animation: highlight-pulse 2s ease !important;
+}
+
+@keyframes highlight-pulse {
+    0%, 100% { background: inherit; }
+    50% { background: rgba(74, 144, 217, 0.3); }
+}
+
+/* Export Modal */
+.export-modal .export-target {
+    margin-bottom: 20px !important;
+}
+
+.radio-label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+.radio-label input[type="radio"] {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.export-modal select {
+    width: 100% !important;
+    padding: 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    background: white !important;
+}
+
+/* Toast */
+.toast {
+    position: fixed !important;
+    bottom: 100px !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(100px) !important;
+    background: #333 !important;
+    color: white !important;
+    padding: 14px 28px !important;
+    border-radius: 10px !important;
+    opacity: 0 !important;
+    transition: all 0.3s ease !important;
+    z-index: 99999 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0) !important;
+    opacity: 1 !important;
+}
+
+/* Poll Button */
+.poll-btn {
+    color: #4a90d9 !important;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    .modal-overlay .modal {
+        background: #2d2d2d !important;
+    }
+    
+    .modal-overlay .modal-header,
+    .modal-overlay .modal-footer {
+        background: #1e1e1e !important;
+        border-color: #444 !important;
+    }
+    
+    .modal-overlay .modal-header h3,
+    .modal-overlay .form-group label,
+    .checkbox-label,
+    .poll-expiry label {
+        color: #eee !important;
+    }
+    
+    .modal-overlay .form-group input[type="text"],
+    .modal-overlay #poll-question,
+    .poll-option-input input,
+    .poll-expiry select,
+    .export-modal select {
+        background: #3d3d3d !important;
+        border-color: #555 !important;
+        color: white !important;
+    }
+    
+    .modal-overlay .btn-secondary {
+        background: #444 !important;
+        color: #eee !important;
+    }
+    
+    .poll-settings {
+        border-color: #444 !important;
+    }
+    
+    .poll-container {
+        background: #2d2d2d !important;
+    }
+    
+    .poll-container .poll-option {
+        background: #3d3d3d !important;
+        border-color: #555 !important;
+    }
+    
+    .poll-container .poll-option.selected {
+        background: #1a3a52 !important;
+        border-color: #4a90d9 !important;
+    }
+    
+    .poll-option-text {
+        color: #eee !important;
+    }
+    
+    .poll-footer {
+        border-color: #444 !important;
+    }
+    
+    .side-panel {
+        background: #1e1e1e !important;
+    }
+    
+    .favorite-item {
+        background: #2d2d2d !important;
+    }
+    
+    .favorite-item:hover {
+        background: #3d3d3d !important;
+    }
+    
+    .radio-label {
+        color: #eee !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 10px !important;
+    }
+    
+    .modal-overlay .modal {
+        max-width: 100% !important;
+        max-height: 90vh !important;
+    }
+    
+    .side-panel {
+        max-width: 100% !important;
+    }
+    
+    .poll-container {
+        max-width: 100% !important;
+    }
+}
