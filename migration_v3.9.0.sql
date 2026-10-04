@@ -1,5 +1,5 @@
 -- VibeMessenger - self-hosted end-to-end encrypted messenger.
--- Copyright (C) 2026 eliduc
+-- Copyright (C) 2026 RLG
 --
 -- This program is free software: you may redistribute it and/or modify it under
 -- the terms of the GNU Affero General Public License, version 3, as published by
