@@ -111,4 +111,23 @@ This creates an archive WITHOUT private keys (generate on target system).
 
 ## 📄 License
 
-MIT License
+**GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`) — see [LICENSE](LICENSE).
+
+This is a deliberately strong copyleft choice for a messenger. The practical consequences:
+
+- You may run, study, modify and redistribute VibeMessenger freely.
+- If you distribute it, modified or not, the recipients get the same freedoms and the complete
+  source.
+- **AGPL section 13:** if you modify VibeMessenger and let people use your modified version
+  *over a network* — which is the normal way to deploy a messenger — you must offer those users
+  the complete corresponding source of your version, at no charge, from a network server.
+  Running a modified fork as a private hosted service without publishing the source is exactly
+  what this licence forbids.
+
+Simply *using* an unmodified instance, or modifying it for yourself without letting others use
+it, triggers no obligation at all.
+
+Third-party components keep their own licences, and two files in `web-client/` are vendored MIT
+libraries that are **not** covered by the AGPL. The full dependency licence audit — read from the
+metadata of the packages actually installed in production — is in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
