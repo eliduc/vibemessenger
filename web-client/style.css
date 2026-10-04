@@ -7178,3 +7178,63 @@ body.multi-select-mode .batch-actions-panel {
 #alert-message {
     white-space: pre-line;
 }
+
+/* КАО#384: Settings -> About, carrying the AGPL section 13 source offer. */
+.auth-license {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.auth-license a { color: var(--text-secondary); text-decoration: underline; }
+.auth-license a:hover { color: var(--primary); }
+.about-name {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+.about-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0 0 10px;
+}
+.about-link {
+    color: var(--primary);
+    text-decoration: underline;
+}
+.about-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+.about-btn {
+    display: inline-block;
+    flex: 1 1 auto;
+    min-width: 132px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.about-btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.about-btn-quiet {
+    background: transparent;
+    color: var(--primary);
+}
+/* a theme-neutral tint, as .link-preview-load-btn already does - a hardcoded
+   rgba(33,150,243,...) would be the LIGHT-mode primary and would not follow the dark theme */
+.about-btn-quiet:hover { background: rgba(127, 127, 127, 0.12); border-color: var(--primary-dark); }
+.about-thirdparty {
+    margin-top: 14px;
+    margin-bottom: 0;
+    font-size: 12px;
+}

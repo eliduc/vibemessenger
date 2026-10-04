@@ -16,7 +16,7 @@
     <!-- КАО#012: allow pinch-zoom (removed maximum-scale/user-scalable=no for a11y) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>VibeMessenger</title>
-    <link rel="stylesheet" href="style.css?v=3.11.45">
+    <link rel="stylesheet" href="style.css?v=3.11.66">
     <link rel="stylesheet" href="poll-favorites-export.css?v=3.11.42"><!-- КАО#297: was the only asset with no ?v= — CDN caches by full URL, so edits to it could never be busted -->
     <link rel="stylesheet" href="key-verification.css?v=3">
     <link rel="stylesheet" href="account-backup.css?v=3.11.19">
@@ -71,6 +71,14 @@
                     <p class="switch-text">Have account? <a href="#" id="show-login">Login</a></p>
                 </form>
                 <div id="auth-error" class="error hidden"></div>
+                <!-- КАО#384: the AGPL section 13 source offer, reachable WITHOUT
+                     signing in. Section 13 says "all users interacting with it
+                     remotely", not "all authenticated users". -->
+                <p class="auth-license">
+                    &copy; 2026 RLG &middot; AGPL-3.0, no warranty &middot;
+                    <a href="https://github.com/eliduc/vibemessenger"
+                       target="_blank" rel="noopener noreferrer">Source code</a>
+                </p>
             </div>
         </div>
         <div id="chats-screen" class="screen">
@@ -364,7 +372,48 @@
                 <div class="settings-section">
                     <button id="reset-e2ee-btn" class="btn" onclick="resetE2EEWithConfirm()" style="margin-bottom: 10px; background: #ff9800; color: white;">🔐 Reset E2EE keys</button>
                     <button id="logout-btn" class="btn logout-btn">Logout</button>
-                    <div class="app-version">v. 3.11.65</div><!-- КАО#013/sug#78: keep in sync with deployed assets -->
+                    <div class="app-version">v. 3.11.66</div><!-- КАО#013/sug#78: keep in sync with deployed assets -->
+                </div>
+                <!-- КАО#384: this block is the AGPL section 13 source offer AND the "Appropriate Legal
+                     Notices" that section 5(d) requires of an interactive interface: the licence defines
+                     those, in section 0, as a copyright notice PLUS a no-warranty notice PLUS a way to view
+                     the licence. All three must stay; a link alone does not satisfy it.
+                     IF YOU FORK THIS: repoint the two URLs below at YOUR OWN repository. Section 13 obliges
+                     you to offer the source of YOUR version - an offer pointing back here does not do that
+                     and leaves you non-compliant. -->
+                <div class="settings-section about-section">
+                    <h3>&#8505;&#65039; About</h3>
+                    <!-- No version here on purpose: `.app-version` above is the single visible version
+                         label (КАО#013) and KAO/pw/prodsmoke.js reads that element. A second copy here
+                         would be a second thing to keep in sync, which is the defect КАО#013 recorded. -->
+                    <div class="about-name">VibeMessenger</div>
+                    <p class="about-text">
+                        Copyright &copy; 2026 RLG. Licensed under the
+                        <a class="about-link" href="https://www.gnu.org/licenses/agpl-3.0.html"
+                           target="_blank" rel="noopener noreferrer">GNU Affero General Public License v3</a>.
+                    </p>
+                    <p class="about-text">
+                        This program comes with <strong>absolutely no warranty</strong>, to the extent
+                        permitted by law. You may study and modify it, and redistribute it under this same
+                        licence &mdash; whoever receives it gets the same freedoms and the complete source.
+                    </p>
+                    <p class="about-text">
+                        If you modify VibeMessenger and let other people use your version over a network,
+                        you must offer them its complete source code at no charge.
+                    </p>
+                    <div class="about-actions">
+                        <a class="about-btn" href="https://github.com/eliduc/vibemessenger"
+                           target="_blank" rel="noopener noreferrer">Source code</a>
+                        <a class="about-btn about-btn-quiet"
+                           href="https://github.com/eliduc/vibemessenger/blob/main/LICENSE"
+                           target="_blank" rel="noopener noreferrer">Full licence</a>
+                    </div>
+                    <p class="about-text about-thirdparty">
+                        Some bundled components are third-party work under their own licences &mdash; see the
+                        <a class="about-link"
+                           href="https://github.com/eliduc/vibemessenger/blob/main/THIRD-PARTY-NOTICES.md"
+                           target="_blank" rel="noopener noreferrer">third-party notices</a>.
+                    </p>
                 </div>
             </div>
         </div>
@@ -621,8 +670,8 @@
         </div>
     </div>
     <script src="pq-kem.js?v=3.11.0"></script>
-    <script src="vibe-crypto.js?v=3.11.65"></script>
-    <script src="app.js?v=3.11.65"></script>
+    <script src="vibe-crypto.js?v=3.11.66"></script>
+    <script src="app.js?v=3.11.66"></script>
     <script src="biometric-auth.js?v=3.11.30"></script>
         <!-- Add Member Modal -->
         <div id="add-member-modal" class="modal hidden">

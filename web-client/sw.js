@@ -14,7 +14,10 @@
 
 // Service Worker for Push Notifications and Offline Support
 // v3.2.4 - Updated cache for E2EE decrypted messages storage
-const CACHE_NAME = 'messenger-v27';
+const CACHE_NAME = 'messenger-v28';
+// КАО#384: generation bumped so `activate` evicts the previously cached index.html and
+// style.css. The fetch handler serves those CACHE-FIRST under UNVERSIONED paths, so
+// bumping the asset ?v= in index.html does not reach them on its own.
 const STATIC_ASSETS = [
     '/',
     '/index.html',
